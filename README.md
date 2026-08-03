@@ -4,26 +4,25 @@ Telegram bot that monitors Cerro Catedral ski status (medios/pistas) via Puppete
 
 ## Requirements
 
+- Ubuntu 24.04 (or similar recent Debian/Ubuntu)
 - Node.js **≥ 22.12** (Puppeteer 25)
 - System libraries for headless Chrome
 - A Telegram bot token and chat ID
 
-**Note:** Ubuntu 18.04 is EOL. Node 22 and Chrome-for-Testing may fail on older glibc. Prefer Ubuntu 20.04/22.04 if you can.
-
-## Fresh Ubuntu setup
+## Fresh Ubuntu 24.04 setup
 
 ### 1. System packages + Node 22
 
 ```bash
 sudo apt update
 sudo apt install -y git curl ca-certificates fonts-liberation \
-  libasound2 libatk-bridge2.0-0 libatk1.0-0 libcairo2 libcups2 \
-  libdbus-1-3 libdrm2 libgbm1 libgtk-3-0 libnspr4 libnss3 \
+  libasound2t64 libatk-bridge2.0-0t64 libatk1.0-0t64 libcairo2 libcups2t64 \
+  libdbus-1-3 libdrm2 libgbm1 libgtk-3-0t64 libnspr4 libnss3 \
   libpango-1.0-0 libx11-6 libxcb1 libxcomposite1 libxdamage1 \
   libxext6 libxfixes3 libxkbcommon0 libxrandr2 xdg-utils unzip
 ```
 
-Install Node 22 with nvm (most reliable on older Ubuntu):
+Install Node 22 with nvm:
 
 ```bash
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
@@ -62,6 +61,8 @@ If Chrome fails to launch:
 
 ```bash
 npx puppeteer browsers install chrome
+# or, as root, also install Chrome system deps:
+# npx puppeteer browsers install chrome --install-deps
 ```
 
 ### 3. Keep it alive with systemd
