@@ -26,34 +26,14 @@ const ESTADO_RANK = {
     'Cerrado': 0, 'Cerrada': 0,
     'Condicional': 1,
     'Regulares': 2,
-    'Normal': 3, 'Abierta': 3,
+    'Normal': 3, 'Abierta': 3, 'Abierto': 3,
 };
 
-const TIPOS_CONFIG = {
-    medios: { emoji: '🚡', label: 'Medios de elevación', abiertoLabel: 'Abiertos' },
-    pistas: { emoji: '⛷️', label: 'Pistas', abiertoLabel: 'Abiertas' },
-    caminos: { emoji: '🔵', label: 'Caminos', abiertoLabel: 'Abiertos' },
-    otros:   { emoji: '📍', label: 'Otros', abiertoLabel: 'Abiertos' },
-};
-
-function clasificarTipo(nombre) {
-    const n = nombre.toLowerCase();
-    if (n.startsWith('ts ') || n.startsWith('tc ') || n.startsWith('t-bar') ||
-        n.startsWith('magic') || n.startsWith('séxtuple') || n.startsWith('sextuple') ||
-        n.startsWith('área')) {
-        return 'medios';
-    }
-    if (n.startsWith('pista')) return 'pistas';
-    if (n.startsWith('camino')) return 'caminos';
-    return 'otros';
-}
-
-function esAbierto(estado) {
-    return ['Normal', 'Abierta', 'Regulares'].includes(estado);
-}
-
-function esCondicional(estado) {
-    return estado === 'Condicional';
+function emojiEstado(estado) {
+    if (['Normal', 'Abierta', 'Abierto', 'Regulares'].includes(estado)) return '🟢';
+    if (estado === 'Condicional') return '🟡';
+    if (['Cerrado', 'Cerrada'].includes(estado)) return '🔴';
+    return '⚪';
 }
 
 function direccionCambio(de, a) {
@@ -64,84 +44,21 @@ function direccionCambio(de, a) {
     return '🔄';
 }
 
-function formatearItem(item) {
-    if (item.cambio) {
-        const dir = direccionCambio(item.cambio.de, item.cambio.a);
-        return `  • *${item.nombre}: ${item.estado}* ${dir}`;
+function formatearItem(nombre, estado, cambio) {
+    const emoji = emojiEstado(estado);
+    if (cambio) {
+        const dir = direccionCambio(cambio.de, cambio.a);
+        return `${emoji} *${nombre}* ${dir}`;
     }
-    return `  • ${item.nombre}: ${item.estado}`;
+    return `${emoji} ${nombre}`;
 }
 
-function formatearSeccionTipo(tipoKey, grupo) {
-    const config = TIPOS_CONFIG[tipoKey];
-    if (!config) return '';
-
-    const totalOperativos = grupo.abiertos.length + grupo.condicionales.length;
-    if (totalOperativos === 0) return '';
-
-    let msg = `${config.emoji} *${config.label}:*\n\n`;
-
-    if (grupo.abiertos.length > 0) {
-        msg += `🟢 ${config.abiertoLabel} (${grupo.abiertos.length}):\n`;
-        grupo.abiertos.forEach(item => {
-            msg += `${formatearItem(item)}\n`;
-        });
-        msg += `\n`;
-    }
-
-    if (grupo.condicionales.length > 0) {
-        msg += `🟡 Condicionales (${grupo.condicionales.length}):\n`;
-        grupo.condicionales.forEach(item => {
-            msg += `${formatearItem(item)}\n`;
-        });
-        msg += `\n`;
-    }
-
-    return msg;
-}
-
-function formatearPanorama(estadoNuevo, cambiosMap = {}, esInicial = false) {
+function formatearPanorama(listaSectores, cambiosMap = {}, esInicial = false) {
     const ahora = new Date();
     const fecha = `${String(ahora.getDate()).padStart(2, '0')}/${String(ahora.getMonth() + 1).padStart(2, '0')}`;
     const hora = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
     const numCambios = Object.keys(cambiosMap).length;
 
-    // Agrupar por tipo, y dentro de cada tipo por estado
-    const porTipo = {
-        medios: { abiertos: [], condicionales: [] },
-        pistas: { abiertos: [], condicionales: [] },
-        caminos: { abiertos: [], condicionales: [] },
-        otros: { abiertos: [], condicionales: [] },
-    };
-    const cerrados = [];
-
-    const sortFn = (a, b) => a.nombre.localeCompare(b.nombre, 'es');
-
-    for (const [nombre, estado] of Object.entries(estadoNuevo)) {
-        const tipo = clasificarTipo(nombre);
-        const cambio = cambiosMap[nombre];
-        const entry = { nombre, estado, cambio };
-
-        if (esAbierto(estado)) {
-            porTipo[tipo].abiertos.push(entry);
-        } else if (esCondicional(estado)) {
-            porTipo[tipo].condicionales.push(entry);
-        } else {
-            cerrados.push(entry);
-        }
-    }
-
-    // Ordenar alfabéticamente dentro de cada grupo
-    for (const grupo of Object.values(porTipo)) {
-        grupo.abiertos.sort(sortFn);
-        grupo.condicionales.sort(sortFn);
-    }
-    cerrados.sort(sortFn);
-
-    const totalCerrados = cerrados.length;
-    const totalGeneral = Object.keys(estadoNuevo).length;
-
-    // Construir mensaje
     let msg = '';
 
     if (esInicial) {
@@ -155,32 +72,51 @@ function formatearPanorama(estadoNuevo, cambiosMap = {}, esInicial = false) {
         msg += `\n⚡ *${numCambios} cambio${numCambios > 1 ? 's' : ''} detectado${numCambios > 1 ? 's' : ''}*\n`;
     }
 
-    // Secciones por tipo (Medios, Pistas, Caminos, Otros)
-    for (const tipoKey of Object.keys(TIPOS_CONFIG)) {
-        const seccion = formatearSeccionTipo(tipoKey, porTipo[tipoKey]);
-        if (seccion) {
-            msg += `\n━━━━━━━━━━━━━━━━━━━━\n\n`;
-            msg += seccion;
+    // Ordenar sectores por su campo Orden
+    const sectoresOrdenados = [...listaSectores].sort((a, b) => (a.Orden ?? 0) - (b.Orden ?? 0));
+
+    let totalInstalaciones = 0;
+
+    for (const sector of sectoresOrdenados) {
+        const sectorNombre = sector.SectorNombre || 'Sin nombre';
+        const medios = sector.Medios || [];
+        const pistas = sector.Pistas || [];
+        const instalaciones = [...medios, ...pistas];
+
+        if (instalaciones.length === 0) continue;
+
+        totalInstalaciones += instalaciones.length;
+
+        msg += `\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+        msg += `📍 *${sectorNombre}*\n\n`;
+
+        // Medios de elevación
+        if (medios.length > 0) {
+            msg += `🚡 _Medios:_\n`;
+            medios.forEach(item => {
+                const nombre = item.Nombre;
+                const estado = item.EstadoEsquiadores || 'Desconocido';
+                const cambio = cambiosMap[nombre];
+                msg += `${formatearItem(nombre, estado, cambio)}\n`;
+            });
+            msg += `\n`;
+        }
+
+        // Pistas y caminos
+        if (pistas.length > 0) {
+            msg += `⛷️ _Pistas y caminos:_\n`;
+            pistas.forEach(item => {
+                const nombre = item.Nombre;
+                const estado = item.EstadoEsquiadores || 'Desconocido';
+                const cambio = cambiosMap[nombre];
+                msg += `${formatearItem(nombre, estado, cambio)}\n`;
+            });
+            msg += `\n`;
         }
     }
 
-    // Sección Cerrados (formato compacto, separados por coma)
     msg += `━━━━━━━━━━━━━━━━━━━━\n\n`;
-    msg += `🔴 *Cerrados (${totalCerrados}):*\n`;
-    if (totalCerrados === 0) {
-        msg += `_Ninguno_\n`;
-    } else {
-        const cerradosParts = cerrados.map(item => {
-            if (item.cambio) {
-                return `*${item.nombre}* ⬇️`;
-            }
-            return item.nombre;
-        });
-        msg += cerradosParts.join(', ') + '\n';
-    }
-
-    msg += `\n━━━━━━━━━━━━━━━━━━━━\n\n`;
-    msg += `📊 ${totalGeneral} instalaciones monitoreadas\n`;
+    msg += `📊 ${totalInstalaciones} instalaciones monitoreadas\n`;
     msg += `⏰ Próximo chequeo en 5 min`;
 
     return msg;
@@ -285,16 +221,16 @@ async function chequearEstado() {
             throw new Error(`API rechazó la petición: ${sectores.message}`);
         }
 
-        console.log(`Datos obtenidos: ${Array.isArray(sectores) ? sectores.length + ' sectores' : typeof sectores}`);
+        // Manejar si la respuesta viene envuelta en un objeto
+        const listaSectores = Array.isArray(sectores) ? sectores : (sectores.data || []);
+
+        console.log(`Datos obtenidos: ${listaSectores.length} sectores`);
 
         const estadoAnterior = obtenerEstadoAnterior();
         const estadoNuevo = {};
         const cambiosMap = {};
 
-        // Manejar si la respuesta viene envuelta en un objeto
-        const listaSectores = Array.isArray(sectores) ? sectores : (sectores.data || []);
-
-        // Iterar sobre el JSON real del Catedral
+        // Construir mapa plano de estados (para comparar cambios)
         listaSectores.forEach(sector => {
             const instalaciones = [...(sector.Medios || []), ...(sector.Pistas || [])];
 
@@ -317,7 +253,8 @@ async function chequearEstado() {
         if (hayCambios || esEstadoInicial) {
             fs.writeFileSync(STATE_FILE, JSON.stringify(estadoNuevo, null, 2));
 
-            const mensaje = formatearPanorama(estadoNuevo, cambiosMap, esEstadoInicial);
+            // Pasar los sectores crudos para formatear por sector
+            const mensaje = formatearPanorama(listaSectores, cambiosMap, esEstadoInicial);
             await enviarMensajeTelegram(CHAT_ID, mensaje);
 
             if (hayCambios) {
