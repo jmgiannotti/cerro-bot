@@ -3,13 +3,14 @@ import cron from 'node-cron';
 import fs from 'fs';
 import { TelegramBot } from 'node-telegram-bot-api';
 import puppeteer from 'puppeteer';
+import { generarMapaConEstados } from './generar_mapa.js';
 
 // Credenciales desde .env
 const TOKEN = process.env.TELEGRAM_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const API_PUBLIC_KEY = process.env.API_PUBLIC_KEY;
-const API_URL = 'https://ws.busplus.com.ar/centrosesqui/partediario/estados?Centro=CA';
 const STATE_FILE = './estado_catedral.json';
+const MAPA_BASE = './mapa_base.png';
+const MAPA_OUTPUT = './mapa_estado_actual.png';
 
 const bot = new TelegramBot(TOKEN, { polling: false });
 
@@ -29,10 +30,13 @@ const ESTADO_RANK = {
     'Normal': 3, 'Abierta': 3, 'Abierto': 3,
 };
 
+const ESTADOS_ABIERTO = new Set(['Normal', 'Abierta', 'Abierto', 'Regulares']);
+const ESTADOS_CERRADO = new Set(['Cerrado', 'Cerrada']);
+
 function emojiEstado(estado) {
-    if (['Normal', 'Abierta', 'Abierto', 'Regulares'].includes(estado)) return '🟢';
+    if (ESTADOS_ABIERTO.has(estado)) return '🟢';
     if (estado === 'Condicional') return '🟡';
-    if (['Cerrado', 'Cerrada'].includes(estado)) return '🔴';
+    if (ESTADOS_CERRADO.has(estado)) return '🔴';
     return '⚪';
 }
 
@@ -253,6 +257,17 @@ async function chequearEstado() {
         if (hayCambios || esEstadoInicial) {
             fs.writeFileSync(STATE_FILE, JSON.stringify(estadoNuevo, null, 2));
 
+            // Generar y enviar mapa
+            const mapaExitoso = await generarMapaConEstados(MAPA_BASE, MAPA_OUTPUT, estadoNuevo);
+
+            if (mapaExitoso) {
+                try {
+                    await bot.sendPhoto(CHAT_ID, MAPA_OUTPUT);
+                } catch (err) {
+                    console.error('Error enviando el mapa por Telegram:', err.message);
+                }
+            }
+
             // Pasar los sectores crudos para formatear por sector
             const mensaje = formatearPanorama(listaSectores, cambiosMap, esEstadoInicial);
             await enviarMensajeTelegram(CHAT_ID, mensaje);
@@ -271,8 +286,8 @@ async function chequearEstado() {
     }
 }
 
-// Programar ejecución cada 2 minutos
-cron.schedule('*/2 * * * *', chequearEstado);
+// Programar ejecución cada 4 minutos
+cron.schedule('*/4 * * * *', chequearEstado);
 
 console.log('🏔️ Bot observer iniciado. Primer chequeo en curso...');
 chequearEstado();
