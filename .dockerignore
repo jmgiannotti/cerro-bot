@@ -1,0 +1,6 @@
+node_modules
+.git
+.gitignore
+estado_catedral.json
+mapa_estado_actual.png
+npm-debug.log
