@@ -57,9 +57,10 @@ pm2 start index.js --name cerro-bot
 If you are going to deploy it on a Linux server, it is recommended to use PM2 to keep it alive.
 
 1. **Install system dependencies for Puppeteer (headless Chrome):**
+   If you skip this step, the bot might run but crash silently when trying to open the browser.
    ```bash
    sudo apt update
-   sudo apt install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libgbm1 libasound2 libpangocairo-1.0-0 libxss1 libgtk-3-0
+   sudo apt install -y ca-certificates fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release wget xdg-utils
    ```
 2. **Run with PM2:**
    ```bash
@@ -134,9 +135,10 @@ pm2 start index.js --name cerro-bot
 Si lo vas a desplegar en un servidor Linux, es recomendable usar PM2 para mantenerlo vivo.
 
 1. **Instalar dependencias del sistema para Puppeteer (Chrome headless):**
+   Si omites este paso, el bot se ejecutará pero crasheará de fondo al intentar abrir el navegador (no enviará mensajes).
    ```bash
    sudo apt update
-   sudo apt install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libgbm1 libasound2 libpangocairo-1.0-0 libxss1 libgtk-3-0
+   sudo apt install -y ca-certificates fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libc6 libcairo2 libcups2 libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libglib2.0-0 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 libxtst6 lsb-release wget xdg-utils
    ```
 2. **Ejecutar con PM2:**
    ```bash

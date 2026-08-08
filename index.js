@@ -157,10 +157,19 @@ async function enviarMensajeTelegram(chatId, mensaje) {
 
 // Navegar al sitio real y capturar la respuesta de la API que la propia página hace
 async function fetchConPuppeteer() {
-    const browser = await puppeteer.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
+    let browser;
+    try {
+        browser = await puppeteer.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox']
+        });
+    } catch (launchError) {
+        console.error('\n❌ ERROR CRÍTICO AL INICIAR PUPPETEER (CHROMIUM) ❌');
+        console.error('Si estás ejecutando el bot en Linux/Ubuntu, es muy probable que te falten instalar las dependencias del sistema operativo.');
+        console.error('Revisa el README.md y corre el comando "sudo apt install..." para solucionarlo.');
+        console.error('Traza del error original:', launchError.message, '\n');
+        throw launchError;
+    }
 
     try {
         const page = await browser.newPage();
@@ -282,7 +291,7 @@ async function chequearEstado() {
         }
 
     } catch (error) {
-        console.error('Error consultando el endpoint:', error.message);
+        console.error(`[${new Date().toISOString()}] Error consultando el endpoint o procesando datos:`, error.message || error);
     }
 }
 
