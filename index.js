@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import express from 'express';
 import cron from 'node-cron';
 import fs from 'fs';
 import { TelegramBot } from 'node-telegram-bot-api';
@@ -300,3 +301,27 @@ cron.schedule('*/4 * * * *', chequearEstado);
 
 console.log('🏔️ Bot observer iniciado. Primer chequeo en curso...');
 chequearEstado();
+
+// ─── Servidor Express para mantener vivo el bot en Render ───────────
+const app = express();
+// Render inyecta dinámicamente el puerto en process.env.PORT
+const port = process.env.PORT || 3000; 
+
+app.get('/', (req, res) => res.send('Bot del Catedral funcionando'));
+app.listen(port, () => {
+    console.log(`Servidor escuchando en el puerto ${port}`);
+    
+    // Si estamos en Render, iniciamos un auto-ping cada 14 minutos a nuestra propia URL pública
+    const url = process.env.RENDER_EXTERNAL_URL;
+    if (url) {
+        console.log(`Iniciando self-ping automático a ${url} para evitar la suspensión...`);
+        setInterval(async () => {
+            try {
+                await fetch(url);
+                console.log(`[${new Date().toISOString()}] Self-ping exitoso para mantener el servidor despierto.`);
+            } catch (err) {
+                console.error('Error en el self-ping:', err.message);
+            }
+        }, 14 * 60 * 1000); // 14 minutos
+    }
+});
