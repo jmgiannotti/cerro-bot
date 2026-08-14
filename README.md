@@ -3,8 +3,8 @@
 A Telegram bot that monitors the status of ski slopes and lifts at Cerro Catedral in real time. It uses Puppeteer to fetch data from the official website and generates an interactive visual map whenever it detects changes.
 
 
-![Expected output 1](assets\mapa_readme.png)
-![Expected output 2](assets\telegram_readme.png)
+![Expected output 1](assets/mapa_readme.png)
+![Expected output 2](assets/telegram_readme.png)
 
 > 🇪🇸 **[Versión en Español abajo](#versión-en-español)**
 
