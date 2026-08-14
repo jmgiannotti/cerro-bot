@@ -9,8 +9,8 @@ import { generarMapaConEstados } from './generar_mapa.js';
 const TOKEN = process.env.TELEGRAM_TOKEN;
 const CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const STATE_FILE = './estado_catedral.json';
-const MAPA_BASE = './mapa_base.png';
-const MAPA_OUTPUT = './mapa_estado_actual.png';
+const MAPA_BASE = './assets/mapa_base.png';
+const MAPA_OUTPUT = './assets/mapa_estado_actual.png';
 
 const bot = new TelegramBot(TOKEN, { polling: false });
 

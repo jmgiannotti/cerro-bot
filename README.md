@@ -2,7 +2,13 @@
 
 A Telegram bot that monitors the status of ski slopes and lifts at Cerro Catedral in real time. It uses Puppeteer to fetch data from the official website and generates an interactive visual map whenever it detects changes.
 
+
+![Expected output 1](assets\mapa_readme.png)
+![Expected output 2](assets\telegram_readme.png)
+
 > 🇪🇸 **[Versión en Español abajo](#versión-en-español)**
+
+
 
 ## Prerequisites
 
@@ -73,7 +79,7 @@ If you are going to deploy it on a Linux server, it is recommended to use PM2 to
 ## How does it work?
 
 1. **Continuous Monitoring:** The bot uses `node-cron` to query the official website every 4 minutes.
-2. **Map Generation:** It relies on `sharp` and an SVG generated on the fly to draw the current status of the slopes on `mapa_base.png`. Then it saves the result in `mapa_estado_actual.png` and sends it to you.
+2. **Map Generation:** It relies on `sharp` and an SVG generated on the fly to draw the current status of the slopes on `assets/mapa_base.png`. Then it saves the result in `assets/mapa_estado_actual.png` and sends it to you.
 3. **Persistent State:** The current state of the mountain is saved locally in the `estado_catedral.json` file. If you restart the bot, it will read this file to avoid sending duplicate notifications and know exactly what changed since the last time.
 
 ---
@@ -151,5 +157,5 @@ Si lo vas a desplegar en un servidor Linux, es recomendable usar PM2 para manten
 ## ¿Cómo funciona?
 
 1. **Monitoreo Continuo:** El bot usa `node-cron` para consultar la web oficial cada 4 minutos.
-2. **Generación del Mapa:** Se apoya en `sharp` y un SVG generado al vuelo para dibujar el estado actual de las pistas sobre `mapa_base.png`. Luego guarda el resultado en `mapa_estado_actual.png` y te lo manda.
+2. **Generación del Mapa:** Se apoya en `sharp` y un SVG generado al vuelo para dibujar el estado actual de las pistas sobre `assets/mapa_base.png`. Luego guarda el resultado en `assets/mapa_estado_actual.png` y te lo manda.
 3. **Estado Persistente:** El estado actual del cerro se guarda localmente en el archivo `estado_catedral.json`. Si reinicias el bot, leerá este archivo para no enviar notificaciones duplicadas y saber qué cambió exactamente desde la última vez.
